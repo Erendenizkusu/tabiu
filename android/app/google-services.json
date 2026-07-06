@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "738024841992",
+    "project_id": "tabiu-f4f04",
+    "storage_bucket": "tabiu-f4f04.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:738024841992:android:4271d41479a5dae2bf02bd",
+        "android_client_info": {
+          "package_name": "com.tabiu.tabiu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB8dCQPfVZfCZCGgiI2QpcmrUBsERgR_c8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
