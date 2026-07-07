@@ -1,17 +1,44 @@
-# tabiu
+# Tabiu — real-time multiplayer Taboo
 
-A new Flutter project.
+A party word-guessing game (**Taboo**) with **live multiplayer rooms**. One player describes
+the secret word without using any of its forbidden "taboo" words; teammates race to guess it
+before the timer runs out, while the opposing team watches for slips — all synchronized across
+devices in real time.
 
-## Getting Started
+## Tech
 
-This project is a starting point for a Flutter application.
+- **Flutter** (Android · iOS · Web)
+- **Firebase** — Realtime Database for live room/round state, Authentication
+- Feature-first architecture:
 
-A few resources to get you started if this is your first Flutter project:
+```
+lib/
+├── app/        # app shell, routing, theming
+├── core/       # shared utilities, constants
+├── data/       # Firebase repositories & models
+├── features/   # game, room, lobby features
+├── widgets/    # reusable UI components
+└── main.dart
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Getting started
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+**Prerequisites:** Flutter SDK, a Firebase project.
+
+```bash
+flutter pub get
+flutterfire configure     # regenerate firebase_options.dart for your own project
+flutter run
+```
+
+> The Firebase config (`google-services.json`, `firebase_options.dart`) ships in the client
+> by design and is safe to be public; security is enforced by **Firebase Realtime Database
+> rules**, so make sure yours are locked down (not left in test mode).
+
+## Screenshots
+
+_Coming soon._
+
+## Tech stack
+
+`Flutter` · `Dart` · `Firebase Realtime Database` · `Firebase Auth`
