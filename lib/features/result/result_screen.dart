@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/palette.dart';
 import '../../app/theme.dart';
+import '../../core/ads.dart';
 import '../../core/haptics.dart';
 import '../../core/sfx.dart';
 import '../../data/models/team.dart';
@@ -32,7 +33,12 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
   void initState() {
     super.initState();
     _isTie = widget.room.winner == 'tie';
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // One ad per finished game, right at this natural break — then the
+      // celebration plays once it's dismissed (or immediately if none was
+      // ready in time, so a slow ad load never holds up the result reveal).
+      await AdsService.instance.showIfReady();
+      if (!mounted) return;
       if (!_isTie) {
         _confetti.play();
         Haptics.instance.celebrate();
@@ -52,6 +58,17 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
         .read(roomRepositoryProvider)
         .leaveRoom(code: widget.code, uid: ref.read(currentUidProvider));
     if (mounted) context.go('/');
+  }
+
+  Future<void> _rematch(String uid) async {
+    try {
+      await ref.read(roomRepositoryProvider).rematch(code: widget.code, uid: uid);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
   }
 
   @override
@@ -103,9 +120,7 @@ class _ResultScreenState extends ConsumerState<ResultScreen> {
                     PrimaryButton(
                       label: 'Rövanş',
                       icon: Icons.replay_rounded,
-                      onPressed: () => ref
-                          .read(roomRepositoryProvider)
-                          .rematch(code: widget.code, uid: uid),
+                      onPressed: () => _rematch(uid),
                     ),
                     const SizedBox(height: 12),
                     GhostButton(

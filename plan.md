@@ -11,6 +11,15 @@ Bu dosya, MVP kabul edildikten sonra kalan işleri takip eder.
 - ✅ Oda temizliği: `expireAt` alanı + host çıkınca batch delete + kurulumda lazy sweep.
 - ✅ Görsel kimlik: "Mor Parti" (derin menekşe premium, grain'li atmosfer, oyuncu balon logo,
   parlak lavanta cam butonlar, dikey premium kart, eski düzen bilgi paneli).
+- ✅ AdMob interstitial: sonuç ekranında, oyun bitince tek reklam (round aralarında/lobide yok).
+  Android App ID + gerçek Ad Unit ID bağlı (`lib/core/ads.dart`). iOS ID'leri de kodda hazır ama
+  proje henüz iOS platformuna eklenmedi — eklenince `ios/Runner/Info.plist`'e
+  `GADApplicationIdentifier` (ca-app-pub-2707472203466324~3625305801) girilmeli.
+- ✅ Bağlantısız açılış ve ağ hatası senaryoları: internet olmadan ilk açılışta (`main.dart`)
+  artık sonsuz boş ekran yerine "Bağlantı kurulamadı" + Tekrar Dene ekranı geliyor; oda
+  kurma/katılma/rövanş/devam gibi tüm aksiyonlar hata mesajını SnackBar ile gösteriyor; round
+  süresi bitince yaşanan geçici Firestore hatası artık round'u sonsuza kadar kilitlemiyor
+  (otomatik tekrar deniyor).
 
 ---
 
@@ -39,6 +48,25 @@ Oyun sırasında turu duraklatma.
 - Round timer'ı durdur/sürdür; tüm istemcilerde senkron (Firestore'da `turnState`'e `pausedAt` /
   kalan süre yaz, `endsAt`'i devam edince yeniden hesapla).
 - Host veya anlatıcı tetikler; oyun ekranına "Mola" butonu, molada overlay + "Devam" butonu.
+
+### 4. AdMob — mağazaya çıkmadan önce kalanlar
+- **UMP / reklam izni akışı** henüz eklenmedi. AB/EEA + İngiltere'de reklam göstermek için Google'ın
+  User Messaging Platform (rıza formu) entegrasyonu şart — `google_mobile_ads` bunu destekliyor,
+  ayrıca bir `google_mobile_ads` UMP kurulumu gerekiyor. Sadece TR hedefleniyorsa öncelik daha düşük,
+  ama mağaza incelemesi öncesi netleştirilmeli.
+- iOS platformu projeye eklendiğinde `Info.plist`'e `GADApplicationIdentifier` + `NSUserTrackingUsageDescription`
+  (ATT — App Tracking Transparency) eklenmeli.
+
+---
+
+## İleride (v2+)
+
+### Kart paketi / kategori satın alma
+Şu an `cards.category` alanı anlamsız placeholder harfler taşıyor, kullanılmıyor
+(bkz. Kurulum notları). İleride:
+- Gerçek kategoriler tanımlanıp kart havuzu kategoriye göre etiketlenecek.
+- Ücretsiz temel paket + satın alınabilir ek kart paketleri (in-app purchase).
+- Oda kurarken kategori/paket filtresi seçilebilecek.
 
 ---
 

@@ -15,6 +15,17 @@ class RoundEndScreen extends ConsumerWidget {
   final String code;
   final Room room;
 
+  Future<void> _next(BuildContext context, WidgetRef ref, String uid) async {
+    try {
+      await ref.read(roomRepositoryProvider).nextRound(code: code, uid: uid);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.read(currentUidProvider);
@@ -68,9 +79,7 @@ class RoundEndScreen extends ConsumerWidget {
               PrimaryButton(
                 label: isLast ? 'Sonuçları Gör' : 'Devam Et (Round ${room.currentRound + 1})',
                 icon: isLast ? Icons.emoji_events_rounded : Icons.arrow_forward_rounded,
-                onPressed: () => ref
-                    .read(roomRepositoryProvider)
-                    .nextRound(code: code, uid: uid),
+                onPressed: () => _next(context, ref, uid),
               )
             else
               Text('Oda sahibinin devam etmesi bekleniyor…',

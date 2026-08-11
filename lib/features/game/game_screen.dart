@@ -65,7 +65,11 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final isHost = widget.room.hostId == uid;
     if (_remaining <= 0 && !_ended && (isNarrator || isHost)) {
       _ended = true;
-      ref.read(roomRepositoryProvider).endTurn(widget.code);
+      ref.read(roomRepositoryProvider).endTurn(widget.code).catchError((_) {
+        // Transient Firestore hiccup — retry on the next 1s tick instead of
+        // leaving the round stuck at 0s forever.
+        _ended = false;
+      });
     }
   }
 
