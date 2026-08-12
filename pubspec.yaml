@@ -65,7 +65,7 @@ dev_dependencies:
 #   dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
   image_path: "tool/icon_full.png"
   min_sdk_android: 21
   remove_alpha_ios: true

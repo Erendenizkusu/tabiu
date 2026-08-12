@@ -13,7 +13,7 @@ Yasaklı kelimelere değmeden anlat, takımını kazandır! Gerçek zamanlı tab
 ## Uzun açıklama (max 4000 karakter)
 ```
 Tabiu, arkadaşlarınla aynı odada ya da uzaktan oynayabileceğin gerçek zamanlı
-bir kelime anlatma oyunudur! Bir kelimeyi, ekrandaki yasaklı kelimelere değmeden
+bir kelime anlatma oyunudur! Bir kelimeyi, ekrandaki yasaklı kelimeleri kullanmadan
 takım arkadaşlarına anlat; onlar bildikçe puanları topla.
 
 🎉 NASIL OYNANIR?
