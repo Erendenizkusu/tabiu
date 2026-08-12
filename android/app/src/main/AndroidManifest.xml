@@ -1,4 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for Firebase (anonymous auth + Firestore) and AdMob. Flutter
+         only injects this into the debug/profile manifests automatically, so
+         release builds crash on launch without it declared here. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="tabiu"
         android:name="${applicationName}"
