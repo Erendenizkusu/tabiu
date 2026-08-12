@@ -7,7 +7,6 @@ import '../../app/palette.dart';
 import '../../app/theme.dart';
 import '../../widgets/app_background.dart';
 import '../../widgets/buttons.dart';
-import '../../widgets/settings_actions.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -15,7 +14,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppBackground(
-      appBar: AppBar(actions: const [SettingsActions(), SizedBox(width: 6)]),
+      appBar: AppBar(),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Column(
