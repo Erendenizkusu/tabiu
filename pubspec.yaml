@@ -57,6 +57,21 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  image: ^4.9.1
+
+# App launcher icon generation. Source PNGs are rendered by
+# `flutter test tool/gen_icon.dart`. Regenerate icons with:
+#   dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "tool/icon_full.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true
+  adaptive_icon_background: "tool/icon_background.png"
+  adaptive_icon_foreground: "tool/icon_foreground.png"
+  adaptive_icon_monochrome: "tool/icon_monochrome.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
