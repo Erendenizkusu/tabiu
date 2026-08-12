@@ -19,24 +19,114 @@ import 'package:flutter_test/flutter_test.dart';
 ///                         adaptive safe zone (Android adaptive foreground).
 ///   icon_monochrome.png — 1024x1024, white silhouette on transparent
 ///                         (Android 13+ themed icon).
+/// Loads a real bold TTF from the host so ParagraphBuilder renders glyphs
+/// instead of tofu boxes (the flutter_test engine ships no Latin fallback).
+Future<void> _loadBrandFont() async {
+  const candidates = [
+    r'C:\Windows\Fonts\segoeuib.ttf',
+    r'C:\Windows\Fonts\arialbd.ttf',
+    '/System/Library/Fonts/SFNSDisplay.ttf',
+    '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+  ];
+  for (final p in candidates) {
+    final f = File(p);
+    if (f.existsSync()) {
+      await ui.loadFontFromList(f.readAsBytesSync(), fontFamily: 'Brand');
+      return;
+    }
+  }
+}
+
 void main() {
   test('generate launcher icon', () async {
+    await _loadBrandFont();
     await _write('tool/icon_full.png', mode: _Mode.full);
     await _write('tool/icon_foreground.png', mode: _Mode.foreground);
     await _write('tool/icon_background.png', mode: _Mode.background);
     await _write('tool/icon_monochrome.png', mode: _Mode.monochrome);
+    // Play Store hi-res listing icon (512x512, full-bleed).
+    await _write('tool/play_store_icon.png', mode: _Mode.full, size: 512);
+    // Play Store feature graphic (1024x500 banner).
+    await _writeFeatureGraphic('tool/play_feature_graphic.png');
   });
 }
 
 enum _Mode { full, foreground, background, monochrome }
 
-Future<void> _write(String path, {required _Mode mode}) async {
-  const size = 1024.0;
+Future<void> _write(String path,
+    {required _Mode mode, double size = 1024}) async {
   final recorder = ui.PictureRecorder();
-  final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, size, size));
+  final canvas = Canvas(recorder, Rect.fromLTWH(0, 0, size, size));
   _paintIcon(canvas, size, mode: mode);
   final picture = recorder.endRecording();
   final image = await picture.toImage(size.toInt(), size.toInt());
+  final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+  File(path).writeAsBytesSync(bytes!.buffer.asUint8List());
+}
+
+/// Play Store feature graphic: a 1024x500 banner with the violet gradient,
+/// the tile+T mark on the left and the "Tabiu" wordmark + tagline beside it.
+Future<void> _writeFeatureGraphic(String path) async {
+  const w = 1024.0;
+  const h = 500.0;
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, w, h));
+  final rect = const Rect.fromLTWH(0, 0, w, h);
+
+  // Violet gradient background.
+  canvas.drawRect(
+    rect,
+    Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF3A1B6E), Color(0xFF160A2E)],
+      ).createShader(rect),
+  );
+  // Glow behind the mark.
+  canvas.drawRect(
+    rect,
+    Paint()
+      ..shader = ui.Gradient.radial(
+        const Offset(300, 250),
+        360,
+        [const Color(0x55C46BFF), const Color(0x00000000)],
+      ),
+  );
+
+  // The tile mark on the left (reuse the icon painter on a 360-box).
+  const markSize = 360.0;
+  canvas.save();
+  canvas.translate(70, (h - markSize) / 2);
+  _paintIcon(canvas, markSize, mode: _Mode.foreground);
+  canvas.restore();
+
+  // Wordmark "Tabiu".
+  final title = ui.ParagraphBuilder(ui.ParagraphStyle(
+    textAlign: TextAlign.left,
+    fontFamily: 'Brand',
+    fontSize: 120,
+    fontWeight: FontWeight.w800,
+  ))
+    ..pushStyle(ui.TextStyle(color: Colors.white, fontWeight: FontWeight.w800))
+    ..addText('Tabiu');
+  final titlePara = title.build()..layout(const ui.ParagraphConstraints(width: 560));
+  canvas.drawParagraph(titlePara, const Offset(470, 170));
+
+  // Tagline.
+  final tag = ui.ParagraphBuilder(ui.ParagraphStyle(
+    textAlign: TextAlign.left,
+    fontFamily: 'Brand',
+    fontSize: 34,
+    fontWeight: FontWeight.w500,
+  ))
+    ..pushStyle(ui.TextStyle(color: const Color(0xFFE9D9FF)))
+    ..addText('Yasaklı kelimelere değmeden anlat');
+  final tagPara = tag.build()..layout(const ui.ParagraphConstraints(width: 520));
+  canvas.drawParagraph(tagPara, const Offset(474, 300));
+
+  final picture = recorder.endRecording();
+  final image = await picture.toImage(w.toInt(), h.toInt());
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   File(path).writeAsBytesSync(bytes!.buffer.asUint8List());
 }
