@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabiu — Veri Silme Talebi</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 760px; margin: 0 auto; padding: 32px 20px 80px;
+      line-height: 1.7; color: #1c1830; background: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #ece7fb; background: #140a26; }
+      a { color: #c98bff; }
+    }
+    h1 { font-size: 1.9rem; margin-bottom: 4px; }
+    h2 { font-size: 1.2rem; margin-top: 32px; }
+    .meta { color: #7a7292; font-size: .9rem; }
+    a { color: #7a3fcf; }
+    ol li { margin-bottom: 8px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid rgba(128,128,128,.3); vertical-align: top; }
+    th { font-weight: 700; }
+    .box {
+      margin-top: 16px; padding: 14px 18px; border-radius: 12px;
+      background: rgba(122,63,207,.10); border: 1px solid rgba(122,63,207,.25);
+    }
+  </style>
+</head>
+<body>
+  <h1>Tabiu — Veri Silme Talebi</h1>
+  <p class="meta">Son güncelleme: 12 Ağustos 2026 · Geliştirici: Tabiu (denizkusueren61@gmail.com)</p>
+
+  <p>Bu sayfa, <strong>Tabiu</strong> uygulaması kullanıcılarının, uygulama
+  tarafından işlenen verilerinin silinmesini nasıl talep edebileceğini açıklar.</p>
+
+  <h2>Verilerinizi nasıl sildirirsiniz?</h2>
+  <p>Tabiu hesap oluşturmayı gerektirmez; sizi tanımlayan kalıcı bir kimlik
+  tutmayız. Yine de sizinle ilişkili verilerin silinmesini istiyorsanız:</p>
+  <ol>
+    <li><strong>denizkusueren61@gmail.com</strong> adresine bir e-posta gönderin.</li>
+    <li>Konu satırına <strong>“Veri Silme Talebi”</strong> yazın.</li>
+    <li>E-postada, sildirmek istediğiniz oyunda kullandığınız <strong>takma adı</strong>
+      ve (biliyorsanız) <strong>oda kodunu</strong> belirtin; böylece kaydı
+      bulabiliriz.</li>
+  </ol>
+  <p>Talebinizi aldıktan sonra ilgili verileri <strong>en geç 30 gün içinde</strong>
+  sileriz ve işlem tamamlandığında size dönüş yaparız.</p>
+
+  <div class="box">
+    <strong>Not:</strong> Oyun ve oda verileri zaten geçicidir; oyun oturumu
+    bittikten kısa süre sonra otomatik olarak silinir. Ayrıca uygulama içindeki
+    ayarlar ve son kullanılan takma ad yalnızca kendi cihazınızda tutulur —
+    uygulamayı kaldırdığınızda bunlar cihazınızdan tamamen silinir.
+  </div>
+
+  <h2>Silinen ve saklanan veriler</h2>
+  <table>
+    <tr><th>Veri türü</th><th>Nerede</th><th>Durum</th></tr>
+    <tr><td>Takma ad (oyuncu ismi)</td><td>Firebase (Firestore)</td><td>Talep üzerine silinir; oturum sonrası zaten geçici</td></tr>
+    <tr><td>Anonim kimlik (Firebase Anonymous)</td><td>Firebase Auth</td><td>Talep üzerine silinir</td></tr>
+    <tr><td>Oyun / oda verileri (kod, takım, puan)</td><td>Firebase (Firestore)</td><td>Oturum bitince otomatik silinir</td></tr>
+    <tr><td>Tema, ses, son takma ad</td><td>Yalnızca cihaz</td><td>Uygulamayı kaldırınca silinir</td></tr>
+    <tr><td>Reklam kimliği (AdMob)</td><td>Google AdMob</td><td>Cihaz ayarlarından sıfırlanabilir; <a href="https://support.google.com/googleplay/answer/3405269">nasıl?</a></td></tr>
+  </table>
+
+  <h2>İletişim</h2>
+  <p>Her türlü soru için: <a href="mailto:denizkusueren61@gmail.com">denizkusueren61@gmail.com</a><br>
+  Gizlilik politikamız: <a href="https://erendenizkusu.github.io/tabiu/">erendenizkusu.github.io/tabiu</a></p>
+</body>
+</html>
