@@ -2,36 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Pops a floating bubble (e.g. "+1", "+2", "TABU!") near the top of the game
-/// area that scales in, drifts up and fades — the tactile reward for an action.
+/// Pops a floating bubble (e.g. "+1", "+2", "TABU!") that rises out of the
+/// action button that triggered it, drifts up and fades — the tactile reward
+/// for an action.
+///
+/// [alignX] places the bubble horizontally over the pressed button, in the
+/// [-1, 1] range (-1 = left edge, 0 = centre, 1 = right edge), matching the
+/// three-column control row.
 void showScorePop(
   BuildContext context, {
   required String text,
   required Color color,
   IconData? icon,
+  double alignX = 0.0,
 }) {
   final overlay = Overlay.of(context);
-  final size = MediaQuery.of(context).size;
+  final mq = MediaQuery.of(context);
+  // Sit just above the narrator control row (action buttons + pass + hint),
+  // accounting for the bottom safe-area inset, then float upward.
+  final bottomOffset = mq.padding.bottom + 188;
   late OverlayEntry entry;
   entry = OverlayEntry(
     builder: (_) => Positioned(
-      top: size.height * 0.30,
-      left: 0,
-      right: 0,
+      bottom: bottomOffset,
+      left: 20,
+      right: 20,
       child: IgnorePointer(
-        child: Center(
+        child: Align(
+          alignment: Alignment(alignX, 0),
           child: _Bubble(text: text, color: color, icon: icon)
               .animate(onComplete: (_) => entry.remove())
               .scale(
-                begin: const Offset(0.3, 0.3),
+                begin: const Offset(0.4, 0.4),
                 end: const Offset(1, 1),
-                duration: 260.ms,
-                curve: Curves.elasticOut,
+                duration: 240.ms,
+                curve: Curves.easeOutBack,
               )
-              .fadeIn(duration: 160.ms)
-              .then(delay: 260.ms)
-              .moveY(begin: 0, end: -90, duration: 620.ms, curve: Curves.easeOut)
-              .fadeOut(duration: 620.ms),
+              .fadeIn(duration: 140.ms)
+              .then(delay: 220.ms)
+              .moveY(begin: 0, end: -120, duration: 640.ms, curve: Curves.easeOut)
+              .fadeOut(duration: 640.ms),
         ),
       ),
     ),

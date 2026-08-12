@@ -91,14 +91,14 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   void _correct() {
     Haptics.instance.success();
     Sfx.instance.correct();
-    showScorePop(context, text: '+1', color: AppColors.green, icon: Icons.check_rounded);
+    showScorePop(context, text: '+1', color: AppColors.green, icon: Icons.check_rounded, alignX: -0.66);
     _repo.markCorrect(widget.code);
   }
 
   void _double() {
     Haptics.instance.success();
     Sfx.instance.doubleCorrect();
-    showScorePop(context, text: '+2', color: const Color(0xFF1F9E5A), icon: Icons.bolt_rounded);
+    showScorePop(context, text: '+2', color: const Color(0xFF1F9E5A), icon: Icons.bolt_rounded, alignX: 0.0);
     _repo.markDoubleCorrect(widget.code);
   }
 
@@ -106,7 +106,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     Haptics.instance.error();
     Sfx.instance.tabu();
     _shakeKey.currentState?.shake();
-    showScorePop(context, text: 'TABU!', color: AppColors.red, icon: Icons.block_rounded);
+    showScorePop(context, text: 'TABU!', color: AppColors.red, icon: Icons.block_rounded, alignX: 0.66);
     _repo.markTabu(widget.code);
   }
 
