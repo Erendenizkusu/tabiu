@@ -62,6 +62,13 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // Disable R8 code shrinking/obfuscation. It was stripping the
+            // WorkManager/Room classes (WorkDatabase) that google_mobile_ads
+            // pulls in, so the app crashed on launch via androidx.startup's
+            // InitializationProvider — before the splash. Dart is AOT-compiled
+            // regardless, so this only affects the thin Java/Kotlin glue.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
