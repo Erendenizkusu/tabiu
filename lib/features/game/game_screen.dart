@@ -54,12 +54,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 
   int get _remaining {
-    final endsAt = widget.room.turn?.endsAt;
+    final turn = widget.room.turn;
+    if (turn == null) return 0;
+    if (turn.paused) return turn.pausedRemaining;
+    final endsAt = turn.endsAt;
     if (endsAt == null) return 0;
     return endsAt.difference(DateTime.now()).inSeconds.clamp(0, 1 << 20);
   }
 
   void _maybeEndTurn() {
+    final turn = widget.room.turn;
+    if (turn != null && turn.paused) return; // frozen — don't end the round
     final uid = ref.read(currentUidProvider);
     final isNarrator = widget.room.isNarrator(uid);
     final isHost = widget.room.hostId == uid;
@@ -115,6 +120,17 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     _repo.passCard(widget.code);
   }
 
+  void _togglePause() {
+    final turn = widget.room.turn;
+    if (turn == null) return;
+    Haptics.instance.selection();
+    if (turn.paused) {
+      _repo.resumeTurn(widget.code);
+    } else {
+      _repo.pauseTurn(widget.code);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
@@ -126,6 +142,8 @@ class _GameScreenState extends ConsumerState<GameScreen> {
       data: (players) => players.where((p) => p.id == turn?.narratorId).firstOrNull,
       orElse: () => null,
     );
+
+    final paused = turn?.paused ?? false;
 
     return PopScope(
       canPop: false,
@@ -139,50 +157,64 @@ class _GameScreenState extends ConsumerState<GameScreen> {
             icon: const Icon(Icons.close_rounded),
             onPressed: _leave,
           ),
+          actions: [
+            // Only the narrator can freeze/resume the countdown (e.g. someone
+            // had to step away mid-turn).
+            if (isNarrator && turn != null)
+              IconButton(
+                icon: Icon(paused
+                    ? Icons.play_arrow_rounded
+                    : Icons.pause_rounded),
+                tooltip: paused ? 'Devam et' : 'Duraklat',
+                onPressed: _togglePause,
+              ),
+          ],
         ),
         child: turn == null
             ? const Center(child: CircularProgressIndicator())
-            : Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 16),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6),
-                          child: AspectRatio(
-                            aspectRatio: 0.70,
-                            child: _Shaker(
-                              key: _shakeKey,
-                              child: isNarrator
-                                  ? _narratorCard(turn)
-                                  : HiddenCard(
-                                      message: narrator == null
-                                          ? 'Anlatıcı kartı görüyor'
-                                          : 'Anlatıcı: ${narrator.name}',
-                                    ),
-                            ),
-                          ),
-                        ),
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                    final card = _Shaker(
+                      key: _shakeKey,
+                      child: _CardArea(
+                        paused: paused,
+                        child: isNarrator
+                            ? _narratorCard(turn)
+                            : HiddenCard(
+                                message: narrator == null
+                                    ? 'Anlatıcı kartı görüyor'
+                                    : 'Anlatıcı: ${narrator.name}',
+                              ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _InfoPanel(remaining: _remaining, room: room),
-                    const SizedBox(height: 14),
-                    if (isNarrator)
-                      _NarratorControls(
-                        passesLeft: room.settings.passRights - turn.passesUsed,
-                        onCorrect: _correct,
-                        onDouble: _double,
-                        onTabu: _tabu,
-                        onPass: _pass,
-                      )
-                    else
-                      _SpectatorFooter(teamLabel: room.turnTeam.label),
-                  ],
+                    );
+
+                    final controls = isNarrator
+                        ? _NarratorControls(
+                            passesLeft:
+                                room.settings.passRights - turn.passesUsed,
+                            onCorrect: _correct,
+                            onDouble: _double,
+                            onTabu: _tabu,
+                            onPass: _pass,
+                          )
+                        : _SpectatorFooter(teamLabel: room.turnTeam.label);
+
+                    final panel = _InfoPanel(remaining: _remaining, room: room);
+
+                    // Clamp text scaling so a large system font can't blow up
+                    // the HUD and strangle the card.
+                    return MediaQuery.withClampedTextScaling(
+                      maxScaleFactor: 1.15,
+                      child: _GameBody(
+                        available: constraints.maxHeight,
+                        card: card,
+                        panel: panel,
+                        controls: controls,
+                      ),
+                    );
+                  },
                 ),
               ),
-      ),
     );
   }
 
@@ -210,6 +242,137 @@ class _GameScreenState extends ConsumerState<GameScreen> {
   }
 }
 
+/// Lays out the card + HUD. On tall screens the card flexes to fill the space
+/// left over by the fixed panel/controls; on a short viewport (small phone or
+/// large system font) it falls back to a scrollable layout with a guaranteed
+/// card height so nothing ever gets crushed.
+class _GameBody extends StatelessWidget {
+  const _GameBody({
+    required this.available,
+    required this.card,
+    required this.panel,
+    required this.controls,
+  });
+
+  final double available;
+  final Widget card;
+  final Widget panel;
+  final Widget controls;
+
+  @override
+  Widget build(BuildContext context) {
+    const padding = EdgeInsets.fromLTRB(20, 4, 20, 16);
+    final fill = available >= 620;
+    if (fill) {
+      return Padding(
+        padding: padding,
+        child: Column(
+          children: [
+            Expanded(child: card),
+            const SizedBox(height: 12),
+            panel,
+            const SizedBox(height: 14),
+            controls,
+          ],
+        ),
+      );
+    }
+    return SingleChildScrollView(
+      padding: padding,
+      child: Column(
+        children: [
+          SizedBox(height: 320, child: card),
+          const SizedBox(height: 12),
+          panel,
+          const SizedBox(height: 14),
+          controls,
+        ],
+      ),
+    );
+  }
+}
+
+/// Centres the card in the space it's given (capped width for tablets/wide
+/// screens), keeps its portrait proportions, and overlays the paused scrim.
+class _CardArea extends StatelessWidget {
+  const _CardArea({required this.child, required this.paused});
+  final Widget child;
+  final bool paused;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: AspectRatio(
+            aspectRatio: 0.72,
+            child: Stack(
+              children: [
+                Positioned.fill(child: child),
+                if (paused) const Positioned.fill(child: _PausedOverlay()),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PausedOverlay extends StatelessWidget {
+  const _PausedOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: Container(
+        color: const Color(0xF2160A2E),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 84,
+              height: 84,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.violet, AppColors.magenta],
+                ),
+              ),
+              child: const Icon(Icons.pause_rounded,
+                  color: Colors.white, size: 46),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              'Duraklatıldı',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Anlatıcı devam ettirene kadar süre durur.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.65),
+                fontSize: 13.5,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _InfoPanel extends StatelessWidget {
   const _InfoPanel({required this.remaining, required this.room});
   final int remaining;
@@ -217,7 +380,8 @@ class _InfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final urgent = remaining <= 10;
+    final paused = room.turn?.paused ?? false;
+    final urgent = remaining <= 10 && !paused;
     final passesLeft = room.settings.passRights - (room.turn?.passesUsed ?? 0);
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -231,21 +395,24 @@ class _InfoPanel extends StatelessWidget {
           // Timer row.
           Row(
             children: [
-              Icon(Icons.timer_rounded,
+              Icon(paused ? Icons.pause_circle_filled_rounded : Icons.timer_rounded,
                   size: 22, color: urgent ? AppColors.red : context.tokens.gold),
               const SizedBox(width: 8),
-              Text('Süre: ',
+              Text(paused ? 'Duraklatıldı' : 'Süre: ',
                   style: context.texts.titleLarge?.copyWith(
                       fontSize: 20,
-                      color: urgent ? AppColors.red : context.scheme.onSurface)),
-              Text('$remaining sn',
-                  style: context.texts.titleLarge?.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: urgent ? AppColors.red : context.scheme.onSurface,
-                      fontFeatures: const [FontFeature.tabularFigures()])),
+                      color: paused
+                          ? context.tokens.gold
+                          : (urgent ? AppColors.red : context.scheme.onSurface))),
+              if (!paused)
+                Text('$remaining sn',
+                    style: context.texts.titleLarge?.copyWith(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: urgent ? AppColors.red : context.scheme.onSurface,
+                        fontFeatures: const [FontFeature.tabularFigures()])),
               const Spacer(),
-              Text('${room.settings.roundSeconds} sn',
+              Text(paused ? '$remaining sn kaldı' : '${room.settings.roundSeconds} sn',
                   style: TextStyle(color: context.tokens.textDim, fontSize: 15)),
             ],
           ),

@@ -165,6 +165,48 @@ class RoomRepository {
     });
   }
 
+  /// Narrator freezes the countdown (e.g. someone had to step away). Stores the
+  /// seconds left so it can resume from the same point; syncs to all clients.
+  Future<void> pauseTurn(String code) async {
+    final ref = _rooms.doc(code);
+    await _db.runTransaction((tx) async {
+      final room = Room.fromDoc(await tx.get(ref));
+      final turn = room.turn;
+      if (room.status != RoomStatus.playing || turn == null || turn.paused) {
+        return;
+      }
+      final endsAt = turn.endsAt;
+      final remaining = endsAt == null
+          ? 0
+          : endsAt.difference(DateTime.now()).inSeconds.clamp(0, 1 << 20);
+      tx.update(ref, {
+        'turnState.paused': true,
+        'turnState.pausedRemaining': remaining,
+        'expireAt': _expireAt,
+      });
+    });
+  }
+
+  /// Resumes a paused turn, restarting the countdown from the frozen seconds.
+  Future<void> resumeTurn(String code) async {
+    final ref = _rooms.doc(code);
+    await _db.runTransaction((tx) async {
+      final room = Room.fromDoc(await tx.get(ref));
+      final turn = room.turn;
+      if (room.status != RoomStatus.playing || turn == null || !turn.paused) {
+        return;
+      }
+      final endsAt = Timestamp.fromDate(
+          DateTime.now().add(Duration(seconds: turn.pausedRemaining)));
+      tx.update(ref, {
+        'turnState.paused': false,
+        'turnState.pausedRemaining': FieldValue.delete(),
+        'turnState.endsAt': endsAt,
+        'expireAt': _expireAt,
+      });
+    });
+  }
+
   /// Called when the round timer reaches zero.
   Future<void> endTurn(String code) async {
     final ref = _rooms.doc(code);

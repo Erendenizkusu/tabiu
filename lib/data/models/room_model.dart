@@ -23,6 +23,8 @@ class TurnState {
     required this.frontCardId,
     required this.backCardId,
     required this.showingBack,
+    this.paused = false,
+    this.pausedRemaining = 0,
   });
 
   final String narratorId;
@@ -32,6 +34,12 @@ class TurnState {
   final String frontCardId;
   final String backCardId;
   final bool showingBack;
+
+  /// Whether the narrator has frozen the countdown. While paused, [endsAt] is
+  /// ignored and [pausedRemaining] holds the seconds left, so resuming picks up
+  /// exactly where it stopped — and every client agrees via Firestore.
+  final bool paused;
+  final int pausedRemaining;
 
   /// The card id currently facing the narrator.
   String get visibleCardId => showingBack ? backCardId : frontCardId;
@@ -46,6 +54,8 @@ class TurnState {
       frontCardId: (pair['frontCardId'] ?? '').toString(),
       backCardId: (pair['backCardId'] ?? '').toString(),
       showingBack: m['showingBack'] == true,
+      paused: m['paused'] == true,
+      pausedRemaining: (m['pausedRemaining'] as num?)?.toInt() ?? 0,
     );
   }
 }

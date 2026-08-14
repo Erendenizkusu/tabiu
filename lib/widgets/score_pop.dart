@@ -57,7 +57,12 @@ class _Bubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Material (transparent) so the text inside has a Material ancestor while
+    // living in the root Overlay — otherwise Flutter paints the yellow
+    // "missing Material" double underline under the label.
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
       decoration: BoxDecoration(
         color: color,
@@ -86,6 +91,7 @@ class _Bubble extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

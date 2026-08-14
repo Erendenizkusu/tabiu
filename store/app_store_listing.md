@@ -121,25 +121,21 @@ Toplanan veri türleri:
 
 ## ⚠️ Mac ile build almadan ÖNCE tamamlanması gerekenler (kod tarafı)
 
-### 1) iOS AdMob App ID (ZORUNLU — yoksa uygulama iOS'ta açılışta çöker)
-Android'deki gibi iOS için de AdMob "App ID" gerekli. AdMob konsolunda iOS
-uygulaması oluşturup app id'sini (`ca-app-pub-...~...` formatında) al, sonra
-`ios/Runner/Info.plist` içine ekle:
+### 1) iOS AdMob App ID — ✅ TAMAMLANDI
+`ios/Runner/Info.plist` içine eklendi:
 ```xml
 <key>GADApplicationIdentifier</key>
-<string>ca-app-pub-2707472203466324~XXXXXXXXXX</string>
+<string>ca-app-pub-2707472203466324~3625305801</string>
 ```
 > iOS interstitial reklam birimi zaten kodda var (lib/core/ads.dart →
-> ca-app-pub-2707472203466324/8630934489). Eksik olan sadece iOS **App ID**.
+> ca-app-pub-2707472203466324/8630934489).
 
-### 2) App Tracking Transparency (kişiselleştirilmiş reklam için)
-`ios/Runner/Info.plist` içine:
+### 2) App Tracking Transparency — ✅ TAMAMLANDI
+`ios/Runner/Info.plist` içine eklendi:
 ```xml
 <key>NSUserTrackingUsageDescription</key>
 <string>Sana daha alakalı reklamlar göstermek için kullanılır.</string>
 ```
-> İstemezsen bunu eklemeyip AdMob'u kişiselleştirilmemiş reklamla da
-> çalıştırabilirsin; o zaman App Privacy'de "Used for tracking = Hayır" yap.
 
 ### 3) Ekran görüntüleri (App Store için zorunlu)
 - **6.9" iPhone** (1320×2868) veya **6.7" iPhone** (1290×2796) — en az 1, tercihen 3-5 adet.
