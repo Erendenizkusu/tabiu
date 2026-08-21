@@ -7,6 +7,7 @@ import '../models/game_settings.dart';
 import '../models/player_model.dart';
 import '../models/room_model.dart';
 import '../models/team.dart';
+import '../seen_cards.dart';
 import 'card_repository.dart';
 
 /// User-facing error with a Turkish message.
@@ -25,10 +26,11 @@ const _kCodeChars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no I,L,O,0,1
 /// Creates, joins, streams and drives game rooms. This is the game engine:
 /// scoring, card draws, round advancement and cleanup all live here.
 class RoomRepository {
-  RoomRepository(this._db, this._cards);
+  RoomRepository(this._db, this._cards, this._seen);
 
   final FirebaseFirestore _db;
   final CardRepository _cards;
+  final SeenCardsStore _seen;
   final _rng = Random();
 
   CollectionReference<Map<String, dynamic>> get _rooms => _db.collection('rooms');
@@ -60,6 +62,11 @@ class RoomRepository {
     unawaited(_cleanupExpired());
     final code = await _uniqueCode();
     final ref = _rooms.doc(code);
+    // Seed the new room with the cards this device has recently seen so a fresh
+    // game skips words from the player's last few games instead of drawing an
+    // independent random sample (which made the same cards recur across rooms).
+    await _cards.loadAll();
+    final seeded = _seen.ids();
     await ref.set({
       'hostId': uid,
       'status': RoomStatus.lobby.name,
@@ -68,7 +75,7 @@ class RoomRepository {
       'turnTeam': Team.red.name,
       'scores': {'red': 0, 'blue': 0},
       'winner': null,
-      'usedCardIds': <String>[],
+      'usedCardIds': seeded,
       'createdAt': FieldValue.serverTimestamp(),
       'expireAt': _expireAt,
     });

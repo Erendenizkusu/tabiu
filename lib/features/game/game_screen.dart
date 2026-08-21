@@ -46,11 +46,33 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     super.didUpdateWidget(old);
     // A fresh turn started — re-arm the end-of-turn trigger.
     if (old.room.turn?.endsAt != widget.room.turn?.endsAt) _ended = false;
+    _recordSeenPair(old.room.turn, widget.room.turn);
   }
 
   Future<void> _ensureCards() async {
     await ref.read(cardRepositoryProvider).loadAll();
-    if (mounted) setState(() => _cardsReady = true);
+    if (!mounted) return;
+    setState(() => _cardsReady = true);
+    // Log the pair already on screen when the game opens.
+    _recordSeenPair(null, widget.room.turn);
+  }
+
+  /// Remembers a newly shown pair in this device's local history so future
+  /// rooms skip these words. Runs on every device (not just the narrator's),
+  /// since each one observes the pair through the room stream.
+  void _recordSeenPair(TurnState? oldTurn, TurnState? newTurn) {
+    if (newTurn == null) return;
+    if (oldTurn != null &&
+        oldTurn.frontCardId == newTurn.frontCardId &&
+        oldTurn.backCardId == newTurn.backCardId) {
+      return; // same pair — nothing new to record
+    }
+    final count = ref.read(cardRepositoryProvider).count;
+    if (count == 0) return; // bank not loaded yet
+    ref.read(seenCardsProvider).remember(
+      [newTurn.frontCardId, newTurn.backCardId],
+      bankSize: count,
+    );
   }
 
   int get _remaining {

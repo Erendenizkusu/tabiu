@@ -41,6 +41,9 @@ class CardRepository {
 
   bool get isLoaded => _cache != null;
 
+  /// Number of cards in the loaded bank (0 until [loadAll] completes).
+  int get count => _cache?.length ?? 0;
+
   /// Picks two distinct cards not in [used]. Falls back to the whole bank when
   /// fewer than two unused cards remain (deck reshuffle).
   CardPair drawPair(Set<String> used) {
